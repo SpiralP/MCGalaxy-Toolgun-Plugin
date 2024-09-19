@@ -1,3 +1,4 @@
 {
-  "dotnet.defaultSolution": "MCGalaxy-Toolgun-Plugin.sln"
+    "dotnet.defaultSolution": "MCGalaxy-Toolgun-Plugin.sln",
+    "dotnet.preferCSharpExtension": true
 }
