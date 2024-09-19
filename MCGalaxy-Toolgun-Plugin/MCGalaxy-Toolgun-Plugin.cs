@@ -28,15 +28,22 @@ namespace MCGalaxy {
 
         public static void OnPluginMessageReceived(Player sender, byte channel, byte[] data) {
             if (channel != CHANNEL) { return; }
+
+            Debug(
+                "MCGalaxyToolgunPlugin OnPluginMessageReceived {0}",
+                sender.truename
+            );
             HavePlugin.Add(sender);
         }
 
         public static void OnPlayerDisconnect(Player p, string reason) {
-            Debug(
-                "OnPlayerDisconnect {0}",
-                p.truename
-            );
-            HavePlugin.Remove(p);
+            if (HavePlugin.Contains(p)) {
+                Debug(
+                    "MCGalaxyToolgunPlugin OnPlayerDisconnect {0}",
+                    p.truename
+                );
+                HavePlugin.Remove(p);
+            }
         }
 
 
@@ -44,11 +51,13 @@ namespace MCGalaxy {
             if (result != ChangeResult.Modified) { return; }
 
             Level level = p.level;
+            if (level.GetBlock(x, y, z) == Block.Air) { return; }
 
             var players = PlayerInfo.Online.Items
-                .Where((p) => p.Supports(CpeExt.PluginMessages))
-                .Where((p) => HavePlugin.Contains(p))
-                .Where((p) => p.level == level)
+                .Where((other) => other != p)
+                .Where((other) => other.Supports(CpeExt.PluginMessages))
+                .Where((other) => HavePlugin.Contains(other))
+                .Where((other) => other.level == level)
                 .ToArray();
 
             byte[] data = new byte[Packet.PluginMessageDataLength];
@@ -59,7 +68,9 @@ namespace MCGalaxy {
             NetUtils.WriteU16(y, data, i); i += 2;
             NetUtils.WriteU16(z, data, i); i += 2;
 
-            p.Send(Packet.PluginMessage(CHANNEL, data));
+            foreach (var other in players) {
+                other.Send(Packet.PluginMessage(CHANNEL, data));
+            }
         }
     }
 }
