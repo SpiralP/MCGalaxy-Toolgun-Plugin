@@ -53,22 +53,17 @@ namespace MCGalaxy {
             Level level = p.level;
             if (level.GetBlock(x, y, z) == Block.Air) { return; }
 
-            var players = PlayerInfo.Online.Items
-                .Where((other) => other != p)
-                .Where((other) => other.Supports(CpeExt.PluginMessages))
-                .Where((other) => HavePlugin.Contains(other))
-                .Where((other) => other.level == level)
-                .ToArray();
-
             byte[] data = new byte[Packet.PluginMessageDataLength];
 
             int i = 0;
             data[i += 1] = p.id;
             NetUtils.WriteU16(x, data, i); i += 2;
             NetUtils.WriteU16(y, data, i); i += 2;
-            NetUtils.WriteU16(z, data, i); i += 2;
+            NetUtils.WriteU16(z, data, i);
 
-            foreach (var other in players) {
+            foreach (var other in HavePlugin) {
+                if (other == p) { continue; }
+                if (other.level != level) { continue; }
                 other.Send(Packet.PluginMessage(CHANNEL, data));
             }
         }
